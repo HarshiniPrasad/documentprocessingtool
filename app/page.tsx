@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SimpleFileUpload from '@/components/simple-file-upload';
 import DocumentReview from '@/components/document-review';
 import { Brain } from 'lucide-react';
@@ -14,6 +14,54 @@ export default function Home() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // PWA install prompt state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+
+  // Register service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/service-worker.js')
+          .then((reg) => {
+            console.log('Service Worker registered:', reg);
+          })
+          .catch((err) => {
+            console.error('Service Worker registration failed:', err);
+          });
+      });
+    }
+  }, []);
+
+  // Listen for beforeinstallprompt event
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  }, []);
+
+  const handleInstallClick = () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      setDeferredPrompt(null);
+      setShowInstallButton(false);
+    });
+  };
 
   const handleProcessingComplete = (docs: Document[]) => {
     setDocuments(docs);
@@ -34,7 +82,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen p-8 relative">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -45,6 +93,16 @@ export default function Home() {
           <p className="text-xl text-gray-600 mb-2">Medical Document Processing AI</p>
           <p className="text-gray-500">Intelligent document extraction and filing system</p>
         </div>
+
+        {/* Install button */}
+        {showInstallButton && (
+          <button
+            onClick={handleInstallClick}
+            className="fixed bottom-6 right-6 bg-blue-600 text-white px-5 py-3 rounded-lg shadow-lg hover:bg-blue-700 transition"
+          >
+            Install Samantha
+          </button>
+        )}
 
         {documents.length === 0 ? (
           <SimpleFileUpload
@@ -61,15 +119,12 @@ export default function Home() {
                   <li key={doc.file.name}>
                     <button
                       className={`w-full text-left px-3 py-2 rounded mb-1 ${
-                        i === currentIndex
-                          ? 'bg-blue-100 font-semibold text-black'
-                          : 'hover:bg-gray-100 text-black'
+                        i === currentIndex ? 'bg-blue-100 font-semibold text-black' : 'hover:bg-gray-100 text-black'
                       }`}
                       onClick={() => setCurrentIndex(i)}
                     >
                       {doc.file.name} <br />
                       <small className="text-gray-500">{doc.data?.category || 'No Category'}</small>
-
                     </button>
                   </li>
                 ))}
