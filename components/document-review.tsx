@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 interface Props {
   data: Record<string, any>;
   file: File;
-  onComplete: () => void;
+  onComplete: (updatedData: any) => void;  // <-- updated here to accept argument
   onBack: () => void;
 }
 
@@ -22,7 +22,6 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
   const [formData, setFormData] = useState(data);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
-
 
   useEffect(() => {
     if (file) {
@@ -45,7 +44,13 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
     const value = formData[field] || '';
     const normalized = field.toLowerCase();
 
-    if (normalized.includes('patient name') || normalized.includes('contact of source') || normalized.includes('user') || normalized.includes('doctor') || normalized.includes('gp')) {
+    if (
+      normalized.includes('patient name') ||
+      normalized.includes('contact of source') ||
+      normalized.includes('user') ||
+      normalized.includes('doctor') ||
+      normalized.includes('gp')
+    ) {
       return (
         <select
           value={value}
@@ -53,7 +58,6 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800"
         >
           <option value={value}>{value}</option>
-          
         </select>
       );
     }
@@ -65,7 +69,6 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
           onChange={(e) => handleChange(field, e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800"
         >
-          
           <option value="Correspondence">Correspondence</option>
           <option value="Investigations">Investigations</option>
         </select>
@@ -80,8 +83,10 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800"
         >
           <option value={value}>{value}</option>
-          {CATEGORY_OPTIONS.filter(opt => opt !== value).map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+          {CATEGORY_OPTIONS.filter((opt) => opt !== value).map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
           ))}
         </select>
       );
@@ -98,28 +103,26 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
   };
 
   const handleSubmit = async () => {
-  try {
-    const res = await fetch('/api/submit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await res.json();
-    if (data.success) {
-      setSuccessMessage('✅ Document successfully filed!');
-      onComplete(formData); // still updates global state
-    } else {
-      setSuccessMessage('❌ Failed to file document.');
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMessage('✅ Document successfully filed!');
+        onComplete(formData); // still updates global state
+      } else {
+        setSuccessMessage('❌ Failed to file document.');
+      }
+    } catch (err) {
+      setSuccessMessage('❌ Error submitting the document.');
     }
-  } catch (err) {
-    setSuccessMessage('❌ Error submitting the document.');
-  }
-};
-
-
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -163,10 +166,7 @@ export default function DocumentReview({ data, file, onComplete, onBack }: Props
           >
             Confirm & File
           </button>
-          {successMessage && (
-  <p className="mt-4 text-green-600 font-medium">{successMessage}</p>
-)}
-
+          {successMessage && <p className="mt-4 text-green-600 font-medium">{successMessage}</p>}
         </div>
       </div>
     </div>
