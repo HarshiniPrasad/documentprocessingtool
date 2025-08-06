@@ -68,7 +68,8 @@ export default function Home() {
                       onClick={() => setCurrentIndex(i)}
                     >
                       {doc.file.name} <br />
-                      <small className="text-gray-500">{doc.data.category || 'No Category'}</small>
+                      <small className="text-gray-500">{doc.data?.category || 'No Category'}</small>
+
                     </button>
                   </li>
                 ))}

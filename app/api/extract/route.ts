@@ -58,22 +58,25 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const prompt = `You are Samantha, an AI medical document processing assistant. Your job is to extract only the following 7 fields from the provided medical document text:
+    const prompt = `You are Samantha, an AI medical document processing assistant. Your job is to extract and return only the following 7 fields from the provided medical document text, strictly as a valid JSON object.
 
-1. patient_name (string)
-2. date_of_report (string, in YYYY-MM-DD format)
-3. subject (string)
-4. contact_of_source (string)
-5. store_in (Correspondence or Investigations)
-6. doctor (string)
-7. category (one of the following: ${CATEGORIES.join(', ')})
+Guidelines:
+1. **patient_name**: Full name of the patient.
+2. **date_of_report**: Use the actual report creation or issue date (often near the signature). Avoid using service or appointment dates.
+3. **subject**: The topic of the document (e.g., SCROTAL ULTRASOUND).
+4. **contact_of_source**: Name of the clinic, hospital, radiology center, or lab that produced the document (e.g., iMED Radiology, not individual doctor names or phone numbers).
+5. **store_in**: Either "Correspondence" or "Investigations" only.
+6. **doctor**: Full name of the referring or signing doctor (usually appears under "Referrer" or with a title like Dr.).
+7. **category**: One of the following values: ${CATEGORIES.join(', ')}.
 
-Return a pure JSON object with those 7 fields. Do not include any other text or formatting.
+Return only a valid JSON object with keys: patient_name, date_of_report, subject, contact_of_source, store_in, doctor, and category.
 
 MEDICAL DOCUMENT TEXT:
 ${text}
 
 JSON RESPONSE:`;
+
+
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
@@ -86,12 +89,8 @@ JSON RESPONSE:`;
     }
 
     responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    let extracted: any;
 
-<<<<<<< HEAD
-    let extracted: any ;
-=======
-    let extracted:any;
->>>>>>> d406fe747753da45c47fe1746187854c7d77209e
     try {
       extracted = JSON.parse(responseText);
     } catch {
