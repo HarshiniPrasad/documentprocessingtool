@@ -1,4 +1,4 @@
-# Samantha - Medical Document Processing AI
+#  Medical Document Processing AI
 
 An intelligent AI-powered medical document processing and filing system built with Next.js, designed to extract key information from medical documents and streamline the filing process for healthcare practices.
 

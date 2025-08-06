@@ -87,7 +87,11 @@ JSON RESPONSE:`;
 
     responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
+<<<<<<< HEAD
     let extracted: any ;
+=======
+    let extracted:any;
+>>>>>>> d406fe747753da45c47fe1746187854c7d77209e
     try {
       extracted = JSON.parse(responseText);
     } catch {
